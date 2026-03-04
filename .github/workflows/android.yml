@@ -18,11 +18,19 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Grant Execute Permission for Gradlew
+      - name: Fix Repositories # 关键步骤：修复仓库地址
+        run: |
+          # 将所有 jcenter() 替换为 mavenCentral()，并确保 google() 在最前面
+          sed -i 's/jcenter()/mavenCentral()/g' build.gradle
+          sed -i 's/google()/google()\n        mavenCentral()/g' build.gradle
+          # 针对 Shizuku 可能需要的额外仓库（如果项目里没写的话）
+          sed -i "/repositories {/a \        maven { url 'https://jitpack.io' }" build.gradle
+
+      - name: Grant Execute Permission
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
